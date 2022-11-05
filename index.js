@@ -30,9 +30,22 @@ async function run() {
 
         /*(READ) created API to get/read all data from DB*/
         app.get('/products', async (req, res) => {
+
+            /* load data based on pagination query */
+            const currentPage = req.query.page;
+            const itemsPerPage = parseInt(req.query.size);
+            console.log(currentPage, itemsPerPage)
+            /* --------------------------------------- */
             const query = {}
             const cursor = productCollection.find(query)
-            const products = await cursor.toArray(); /* to show only 1st 10 data  use {await cursor.limit(10).toArray()}*/
+
+            /* load data based on pagination query */
+            const products = await cursor.skip(currentPage * itemsPerPage).limit(itemsPerPage).toArray();
+            /* --------------------------------------- */
+
+            /* load all data await cursor.toarray()*/
+            /* to show only 1st 10 data  use {await cursor.limit(10).toArray()}*/
+
             const count = await productCollection.countDocuments();
             res.send({ count, products })
         })
