@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require('cors')
 require('dotenv').config()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const port = process.env.PORT || 5000;
 
@@ -32,7 +32,7 @@ async function run() {
         app.get('/products', async (req, res) => {
 
             /* load data based on pagination query */
-            const currentPage = req.query.page;
+            const currentPage = parseInt(req.query.page);
             const itemsPerPage = parseInt(req.query.size);
             console.log(currentPage, itemsPerPage)
             /* --------------------------------------- */
@@ -48,7 +48,17 @@ async function run() {
 
             const count = await productCollection.countDocuments();
             res.send({ count, products })
-        })
+        });
+
+        /* create API to load cart data from server and DB  for better user experience during pagination*/
+        app.post('/productsById', async (req, res) => {
+            const productIds = req.body;
+            const productObjectIds = productIds.map(productId => ObjectId(productId));
+            const query = { _id: { $in: productObjectIds } };
+            const cursor = productCollection.find(query);
+            const products = await cursor.toArray();
+            res.send(products);
+        });
     }
     finally {
 
